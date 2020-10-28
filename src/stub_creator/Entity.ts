@@ -9,7 +9,8 @@ import '../helpers/string'
 export default class Entity extends StubCreator {
   static readonly stub =
     "import 'package:meta/meta.dart';\n" +
-    "import 'package:my_musical_repertoire/core/entity.dart';\n" +
+    "import 'package:{PACKAGE_NAME}/core/entity.dart';\n" +
+    "import 'package:{PACKAGE_NAME}/core/errors/validation_error.dart';\n" +
     '\n' +
     'class {CLASS_NAME} extends Entity {\n' +
     '  \n' +
@@ -43,9 +44,9 @@ export default class Entity extends StubCreator {
   createStub(activeEditor: vscode.TextEditor) {
     activeEditor
       .edit((textEditorEdit) => {
-        const fileName = activeEditor.document.fileName
-        let className = path.basename(fileName, '.dart').snakeToCamel(true)
-        const stub = Entity.stub.replace('{CLASS_NAME}', className)
+        const stub = this.replaceKeywords(Entity.stub, activeEditor.document.fileName)
+
+        // Insert stub
         textEditorEdit.insert(activeEditor.selection.start, stub)
       })
       .then(() => {
@@ -60,15 +61,40 @@ export default class Entity extends StubCreator {
       const properties = this.getProperties(contents)
 
       // Create constructor
-      let constructorString = `${className}({\n` + '    @required id,\n'
+      let addString = `${className}({\n` + '    @required id,\n'
 
       // Add properties
       for (const property of properties) {
-        constructorString += `    @required this.${property.name},\n`
+        addString += `    @required this.${property.name},\n`
       }
-      constructorString += '  }) : super(id);'
+      addString += '  }) : super(id);\n' + '    \n'
 
-      textEditorEdit.insert(activeEditor.selection.start, constructorString)
+      // Create get props
+      addString +=
+        '  @override\n' +
+        '  List<Object> get props {\n' +
+        '    final List<Object> props = super.props;\n' +
+        '    \n' +
+        '    props.add([\n'
+
+      // Add properties
+      for (const property of properties) {
+        addString += `      this.${property.name},\n`
+      }
+      addString += '    ]);\n' + '    \n' + '    return props;\n' + '  }\n' + '  \n'
+
+      // Add validation method
+      addString +=
+        '  @override\n' + '  List<ValidationInfo> validate() {\n' + '    final errors = super.validate();\n' + '    \n'
+
+      // Add validation for properties
+      for (const property of properties) {
+        addString += `    // ${property.name} TODO\n` + '    \n' + '    \n'
+      }
+
+      addString += '    return errors;\n' + '  }'
+
+      textEditorEdit.insert(activeEditor.selection.start, addString)
     })
   }
 }
