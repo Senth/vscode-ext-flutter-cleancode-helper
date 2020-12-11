@@ -1,8 +1,14 @@
-String.prototype.snakeToCamel = function (firstToUpper: boolean = true) {
-  const camelCase = this.replace(/([-_])(\w)/g, (groups) => groups[2].toUpperCase())
-  if (firstToUpper) {
-    return camelCase.replace(/^\w/, (groups) => groups[0].toUpperCase())
-  } else {
-    return camelCase
+export class StringHelper {
+  /**
+   * Converts a snake_case into CamelCase
+   * @param firstToUpper true: CamelCase, false: camelCase
+   */
+  static snakeToCamel(str: string, firstToUpper: boolean = true): string {
+    const camelCase = str.replace(/[-_]\w/g, (fullMatch) => fullMatch[1].toUpperCase())
+    if (firstToUpper) {
+      return camelCase.replace(/^\w/, (fullMatch) => fullMatch[0].toUpperCase())
+    } else {
+      return camelCase
+    }
   }
 }

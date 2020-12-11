@@ -1,9 +1,10 @@
 import * as vscode from 'vscode'
 import Entity from './entity'
+import Model from './Model'
 import { StubCreator } from './StubCreator'
 
 export class Delegator {
-  creators: StubCreator[] = [new Entity()]
+  creators: StubCreator[] = [new Entity(), new Model()]
 
   createStub(): void {
     const creator = this.findCreator()

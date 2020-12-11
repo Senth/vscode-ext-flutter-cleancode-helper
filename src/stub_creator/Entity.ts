@@ -1,16 +1,18 @@
 import { StubCreator } from './StubCreator'
 import * as path from 'path'
 import * as vscode from 'vscode'
-import '../helpers/string'
 
 /**
  * Entity in domain
  */
 export default class Entity extends StubCreator {
+  static readonly position = new vscode.Position(6, 2)
+
   static readonly stub =
     "import 'package:meta/meta.dart';\n" +
-    "import 'package:{PACKAGE_NAME}/core/entity.dart';\n" +
-    "import 'package:{PACKAGE_NAME}/core/errors/validation_error.dart';\n" +
+    '\n' +
+    "import '../../../../core/entity.dart';\n" +
+    "import '../../../../core/errors/validation_error.dart';\n" +
     '\n' +
     'class {CLASS_NAME} extends Entity {\n' +
     '  \n' +
@@ -50,28 +52,28 @@ export default class Entity extends StubCreator {
         textEditorEdit.insert(activeEditor.selection.start, stub)
       })
       .then(() => {
-        activeEditor.selection = new vscode.Selection(new vscode.Position(4, 2), new vscode.Position(4, 2))
+        activeEditor.selection = new vscode.Selection(Entity.position, Entity.position)
       })
   }
 
   update(activeEditor: vscode.TextEditor) {
     activeEditor.edit((textEditorEdit) => {
       const contents = activeEditor.document.getText()
-      const className = this.getClassName(contents)
+      const className = this.getClassName(activeEditor.document.fileName)
       const properties = this.getProperties(contents)
 
       // Create constructor
-      let addString = `${className}({\n` + '    @required id,\n'
+      let addString = `${className}({\n` + '    String id,\n'
 
       // Add properties
       for (const property of properties) {
         addString += `    @required this.${property.name},\n`
       }
-      addString += '  }) : super(id);\n' + '    \n'
+      addString += '  }) : super(id);'
 
       // Create get props
       addString +=
-        '  @override\n' +
+        '\n\n  @override\n' +
         '  List<Object> get props {\n' +
         '    final List<Object> props = super.props;\n' +
         '    \n' +
@@ -81,18 +83,47 @@ export default class Entity extends StubCreator {
       for (const property of properties) {
         addString += `      this.${property.name},\n`
       }
-      addString += '    ]);\n' + '    \n' + '    return props;\n' + '  }\n' + '  \n'
+      addString += '    ]);\n' + '    \n' + '    return props;\n' + '  }'
 
       // Add validation method
       addString +=
-        '  @override\n' + '  List<ValidationInfo> validate() {\n' + '    final errors = super.validate();\n' + '    \n'
+        '\n\n  @override\n' +
+        '  List<ValidationInfo> validate() {\n' +
+        '    final errors = super.validate();\n' +
+        '    \n'
 
       // Add validation for properties
       for (const property of properties) {
-        addString += `    // ${property.name} TODO\n` + '    \n' + '    \n'
+        addString +=
+          `    // ${property.name} TODO\n` +
+          '    \n' +
+          '    \n'
       }
 
-      addString += '    return errors;\n' + '  }'
+      addString +=
+        '    return errors;\n' +
+        '  }'
+
+      // Add copy function
+      addString +=
+        `\n\n  ${className} copy({\n` +
+        '    String id,\n'
+
+      for (const property of properties) {
+        addString += `    ${property.type} ${property.name},\n`
+      }
+
+      addString +=
+        '  }) {\n' +
+        `    return new ${className}(\n` +
+        '      id: id != null ? id : this.id,\n'
+
+      for (const property of properties) {
+        addString += `      ${property.name}: ${property.name} != null ? ${property.name} : this.${property.name},\n`
+      }
+      addString +=
+        '    );\n' +
+        '  }'
 
       textEditorEdit.insert(activeEditor.selection.start, addString)
     })

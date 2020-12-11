@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
-import '../helpers/string'
+import { StringHelper } from '../helpers/string'
 
 /**
  * Base class of all stub creators
@@ -55,7 +55,7 @@ export abstract class StubCreator {
    * Get the class name from its filename
    */
   protected getClassName(fileName: string): string {
-    return path.basename(fileName, '.dart').snakeToCamel(true)
+    return StringHelper.snakeToCamel(path.basename(fileName, '.dart'), true)
   }
 
   /**
@@ -85,12 +85,14 @@ export abstract class StubCreator {
   }
 }
 
-class Property {
+export class Property {
   readonly name: string
   readonly type: string
+  required: boolean
 
-  constructor(type: string, name: string) {
+  constructor(type: string, name: string, required: boolean = false) {
     this.name = name
     this.type = type
+    this.required = required
   }
 }
